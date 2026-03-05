@@ -1,0 +1,73 @@
+<form id="apptForm">
+  <label>
+    Full name
+    <input name="name" required maxlength="80" />
+  </label>
+
+  <label>
+    Phone
+    <input name="phone" required maxlength="30" />
+  </label>
+
+  <label>
+    Email (optional)
+    <input name="email" type="email" maxlength="120" />
+  </label>
+
+  <label>
+    Preferred days/times
+    <input name="availability" required maxlength="200" placeholder="e.g., Mon–Wed afternoons" />
+  </label>
+
+  <label>
+    Request type
+    <select name="type" required>
+      <option value="">Select…</option>
+      <option>Billing question</option>
+      <option>Insurance verification</option>
+      <option>Payment plan</option>
+      <option>Other (non-medical)</option>
+    </select>
+  </label>
+
+  <label>
+    Notes (no medical details)
+    <textarea name="notes" maxlength="400"></textarea>
+  </label>
+
+  <!-- Honeypot (hidden) -->
+  <input name="company" autocomplete="off" tabindex="-1"
+         style="position:absolute; left:-5000px;" />
+
+  <button type="submit">Request appointment</button>
+  <p id="status" role="status"></p>
+</form>
+
+<script>
+  const form = document.getElementById("apptForm");
+  const statusEl = document.getElementById("status");
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    statusEl.textContent = "Sending…";
+
+    const data = Object.fromEntries(new FormData(form).entries());
+
+    try {
+      const res = await fetch("/api/appointment", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+
+      const out = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(out.error || "Request failed");
+
+      statusEl.textContent = "Request sent. We’ll contact you soon.";
+      form.reset();
+    } catch (err) {
+      statusEl.textContent = "Sorry — something went wrong. Please call the office.";
+      console.error(err);
+    }
+  });
+</script>
